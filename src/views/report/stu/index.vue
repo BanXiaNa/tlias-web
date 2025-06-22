@@ -1,9 +1,9 @@
 <script setup>
-
+import PageTitle from '@/views/style/pageTitle.vue'
 </script>
 
 <template>
-  学员信息统计
+  <PageTitle>学员信息统计</PageTitle>
 </template>
 
 <style scoped>

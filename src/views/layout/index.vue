@@ -1,5 +1,13 @@
 <script setup>
 
+import {
+  Avatar,
+  EditPen,
+  Grid, Histogram,
+  StarFilled,
+  SwitchButton,
+  UserFilled
+} from "@element-plus/icons-vue";
 </script>
 
 <template>
@@ -21,11 +29,56 @@
       <el-container>
         <!-- 左侧菜单 -->
         <el-aside width="200px" class="aside">
-          左侧菜单栏
+          <el-scrollbar>
+            <el-menu router>
+               <el-menu-item index="/index">
+                 <template #title>
+                   <el-icon><StarFilled /></el-icon>首页
+                 </template>
+               </el-menu-item>
+              <el-sub-menu index="/manage">
+                <template #title>
+                  <el-icon><Grid /></el-icon>班级学员管理
+                </template>
+                <el-menu-item index="/clazz">
+                  <el-icon><Menu /></el-icon>班级管理
+                </el-menu-item>
+                <el-menu-item index="/stu">
+                  <el-icon><UserFilled /></el-icon>学员管理
+                </el-menu-item>
+              </el-sub-menu>
+              <el-sub-menu index="/system">
+                <template #title>
+                  <el-icon><Grid /></el-icon>系统信息管理
+                </template>
+                <el-menu-item index="/dept">
+                  <el-icon><Menu /></el-icon>部门管理
+                </el-menu-item>
+                <el-menu-item index="/emp">
+                  <el-icon><Avatar /></el-icon>员工管理
+                </el-menu-item>
+              </el-sub-menu>
+              <el-sub-menu index="/report">
+                <template #title>
+                  <el-icon><Grid /></el-icon>数据统计管理
+                </template>
+                <el-menu-item index="/empReport">
+                  <el-icon><Histogram /></el-icon>员工信息统计
+                </el-menu-item>
+                <el-menu-item index="/stuReport">
+                  <el-icon><Histogram /></el-icon>学员信息统计
+                </el-menu-item>
+                <el-menu-item index="/log">
+                  <el-icon><Histogram /></el-icon>日志信息统计
+                </el-menu-item>
+              </el-sub-menu>
+            </el-menu>
+          </el-scrollbar>
         </el-aside>
-        
+
         <el-main>
-          右侧核心展示区域
+        <!--右侧菜单-->
+          <router-view></router-view>
         </el-main>
       </el-container>
       

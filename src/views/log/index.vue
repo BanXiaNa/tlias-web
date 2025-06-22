@@ -1,9 +1,9 @@
 <script setup>
-
+import PageTitle from '@/views/style/pageTitle.vue'
 </script>
 
 <template>
-  日志管理
+  <PageTitle>日志管理</PageTitle>
 </template>
 
 <style scoped>
