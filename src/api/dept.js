@@ -13,4 +13,4 @@ export const addDept = (deptName) => request.post('/depts',deptName)
 export const updateDept = (dept) => request.put('/depts',dept)
 
 // 删除部门
-export const deleteDept = (deptId) => request.delete(`/depts/${deptId}`)
+export const deleteDept = (deptId) => request.delete(`/depts?id=${deptId}`)

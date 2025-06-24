@@ -8,7 +8,7 @@ import { queryDeptList,
   updateDept,
   deleteDept
 } from "@/api/dept";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 /**
  * 钩子函数
@@ -41,7 +41,7 @@ const dialogFormVisible = ref(false);
 // 表单标题
 const dialogTitle = ref("")
 // 表单校验规则
-const rules = {
+const dialogRules = {
   name: [
     { required: true, message: "请输入部门名称", trigger: "blur" },
     { min: 2, max: 10, message: "长度在 2 到 10 个字符之间", trigger: "blur" }
@@ -77,81 +77,119 @@ const closeDialog = () => {
 const setSubmit = (operation) => {
   submit.value = operation
 }
+// 表单校验
+const checkForm = () => {
+  return new Promise((resolve, reject) => {
+    deptForm.value.validate(valid => {
+      if (valid) {
+        resolve(true)
+      } else {
+        ElMessage.error("请填写正确的数据")
+        reject(false)
+      }
+    })
+  })
+}
 
 /**
  * 新增操作
  * @author BanXia
  */
-// 新增按钮
-const addEmp = () => {
-
+// 按钮函数
+const addBut = () => {
 // 新增部门
   setDialogTitle('新增部门')
-  setSubmit(save)
+  setSubmit(add)
   showDialog()
 }
 // 新增操作
-const save = async () => {
-  // 校验表单项
-  // 如果表单项没有值，则不进行提交
-  if(!deptForm.value)return;
-  deptForm.value.validate(async (validator) => {
-    // validator 是否校验通过
-    if(validator){
-      const res = await addDept(deptData.value)
-      if(res.code){// 成功
-        ElMessage.success("添加成功")
-        closeDialog()
-        await getDeptList()
-      }else {// 失败
-        ElMessage.error(res.msg)
-      }
-    }else{
-      ElMessage.error("表单校验不通过")
+const add = async () => {
+  if (await checkForm()){
+    const res = await addDept(deptData.value)
+    if(res.code){// 成功
+      ElMessage.success("添加成功")
+      closeDialog()
+      await getDeptList()
+    }else {// 失败
+      ElMessage.error(res.msg)
     }
-  })
-
+  }
 }
 
 /**
  * 更新操作
+ * @author BanXia
  */
-// 更新按钮
-const deit = async (deptId) => {
-  // 回显部门信息
-  const res = await queryDeptById(deptId)
-  if(res.code){
-    // 成功
-    deptData.value.name = res.data.name
-    deptData.value.id = res.data.id
+// 回显函数
+  const echo = async (deptId) => {
+    const res = await queryDeptById(deptId)
+    if(res.code){
+      // 成功
+      deptData.value.name = res.data.name
+      deptData.value.id = res.data.id
+      return true
+    }else{
+      ElMessage.error(res.msg)
+      return false
+    }
+}
+// 按钮函数
+const updateBut = async (deptId) => {
+  if(await echo(deptId)){
     setDialogTitle('修改部门')
     setSubmit(update)
     showDialog()
-  }else{
-    ElMessage.error(res.msg)
   }
 }
 // 更新操作
-const update = async (id) => {
-  // 校验表单项
-  // 如果表单项没有值，则不进行提交
-  if(!deptForm.value)return;
-  deptForm.value.validate(async (validator) => {
-    // validator 是否校验通过
-    if(validator){
-      const res = await updateDept(deptData.value)
-      if(res.code){// 成功
-        ElMessage.success("更新成功")
-        closeDialog()
-        await getDeptList()
-      }else {// 失败
-        ElMessage.error(res.msg)
-      }
-    }else{
-      ElMessage.error("表单校验不通过")
+const update = async () => {
+  if(await checkForm()){
+    const res = await updateDept(deptData.value)
+    if(res.code){// 成功
+      ElMessage.success("更新成功")
+      closeDialog()
+      await getDeptList()
+    }else {// 失败
+      ElMessage.error(res.msg)
     }
-  })
+  }
+}
 
+/**
+ * 删除操作
+ * @author BanXia
+ */
+// 删除部门确认框
+const delByIdBox = async (deptId) => {
+  // 弹出确认框
+  ElMessageBox.confirm(
+    '是否删除所选部门？',
+    "是否删除",
+    {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      delById(deptId)
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消删除',
+      })
+    })
+}
+// 删除部门
+const delById = async (deptId) => {
+  const res = await deleteDept(deptId)
+  if(res.code){// 成功}
+    ElMessage.success("删除成功")
+    await getDeptList()
+  }else {// 失败
+    ElMessage.error(res.msg)
+  }
 }
 
 
@@ -165,7 +203,7 @@ const update = async (id) => {
 <!--  添加部门按钮-->
 <!--  触发Dialog对话框-->
   <div class="container">
-    <el-button type="primary" @click = "addEmp()">
+    <el-button type="primary" @click = "addBut()">
       <el-icon><CirclePlus /></el-icon>新增部门
     </el-button>
   </div>
@@ -188,10 +226,10 @@ const update = async (id) => {
       />
       <el-table-column label="操作" align="center">
         <template #default="scope">
-          <el-button type="primary" size="small" @click = deit(scope.row.id) >
+          <el-button type="primary" size="small" @click = updateBut(scope.row.id) >
             <el-icon><Edit /></el-icon>编辑
           </el-button>
-          <el-button type="danger" size="small">
+          <el-button type="danger" size="small" @click = "delByIdBox(scope.row.id)">
             <el-icon><Delete /></el-icon>删除
           </el-button>
         </template>
@@ -201,7 +239,7 @@ const update = async (id) => {
 
 <!--新增&修改对话框-->
   <el-dialog v-model="dialogFormVisible" :title="dialogTitle" width="500">
-    <el-form :model="deptData" :rules="rules" ref = "deptForm">
+    <el-form :model="deptData" :rules="dialogRules" ref = "deptForm">
       <el-form-item label="部门名称" :label-width="80" prop="name">
         <el-input v-model="deptData.name"/>
       </el-form-item>
