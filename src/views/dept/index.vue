@@ -121,7 +121,7 @@ const add = async () => {
  * @author BanXia
  */
 // 回显函数
-  const echo = async (deptId) => {
+const echo = async (deptId) => {
     const res = await queryDeptById(deptId)
     if(res.code){
       // 成功
