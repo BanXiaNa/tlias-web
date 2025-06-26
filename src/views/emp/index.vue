@@ -489,8 +489,6 @@ const deleteEmpById = async (emp) => {
     <el-button type="danger" @click="delByIdsBox(delIdList)"> - 批量删除</el-button>
   </div>
 
-  {{delIdList}}
-
 <!--  数据表格-->
   <div class="container">
     <el-scrollbar max-height="600">

@@ -13,3 +13,5 @@ export const updateApi = (emp) => request.put(`/emps`, emp)
 export const deleteApi = (ids) => request.delete(`/emps?ids=${ids}`)
 // 删除头像
 export const deleteAvatarApi = (path) => request.delete(`/delete?path=${encodeURIComponent(path)}`)
+// 根据职位查找 员工
+export const queryEmpByJobIdApi = (jobId) => request.get(`/emps/job?jobId=${jobId}`)
