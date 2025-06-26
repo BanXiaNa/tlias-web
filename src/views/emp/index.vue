@@ -2,8 +2,8 @@
 import PageTitle from "@/views/style/pageTitle.vue";
 import { onMounted, ref, watch } from "vue";
 import { Delete, EditPen, Plus } from "@element-plus/icons-vue";
-import { addApi, deleteAvatarApi, queryPageApi } from "@/api/emp";
-import { ElMessage } from "element-plus";
+import { addApi, deleteAvatarApi, queryByIdApi, queryPageApi, updateApi, deleteApi} from "@/api/emp";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { queryDeptList } from "@/api/dept";
 
 /**
@@ -73,7 +73,12 @@ const handleReset = () => {
  */
 // 数据模型
 const empList = ref([]);
-
+// 批量删除数据模型
+const delIdList= ref([])
+// 多选赋值函数
+const handleSelectionChange = (val) => {
+  delIdList.value = val;
+}
 
 /**
  * 分页条
@@ -81,7 +86,7 @@ const empList = ref([]);
 // 每页显示的记录数
 const currentPage = ref(1);
 // 每页显示的记录数
-const pageSize = ref(5);
+const pageSize = ref(10);
 // 总记录
 const total = ref(0);
 // 改变页码
@@ -112,6 +117,18 @@ const employee = ref({
   image: '',
   exprList: []
 })
+// 性别模型
+const genderList = ref([
+  { name: '男', value: 1 },
+  { name: '女', value: 2 }])
+//职位列表数据
+const jobList = ref([
+  { name: '班主任', value: 1 },
+  { name: '讲师', value: 2 },
+  { name: '学工主管', value: 3 },
+  { name: '教研主管', value: 4 },
+  { name: '咨询师', value: 5 },
+  { name: '其他', value: 6 }])
 // 控制弹窗
 const dialogVisible = ref(false)
 // 标题
@@ -223,16 +240,21 @@ const beforeAvatarUpload = (rawFile) => {
     ElMessage.error('只能上传10M以内图片')
     return false
   }
+  deleteAvatar(employee.value.image)
   return true
 }
 // 删除头像
 const deleteAvatar = async () => {
   if(employee.value.image.length){
     const path = employee.value.image.replace(/^https?:\/\/[^\/]+\//, "");
-    const res = await deleteAvatarApi(path)
+    await deleteAvatarApi(path)
   }
 }
-
+// 通过url组删除头像
+const deleteAvatarByUrl = async (urls) => {
+  urls = urls.replace(/^https?:\/\/[^\/]+\//, "");
+  await deleteAvatarApi(urls)
+}
 /**
  * 工作经历
  * @author BanXia
@@ -312,7 +334,118 @@ const cancelCreate = () => {
  * @author BanXia
  */
 // 按钮触发
-const updateBut = async (empId) => {}
+const updateBut = async (empId) => {
+  // 回显员工
+  await getEmpById(empId)
+  // 设置确认操作
+  setConfirm(updateEmp)
+  // 设置取消操作
+  setCancel(cancelUpdate)
+  // 设置关闭操作
+  setClose(cancelUpdate)
+  // 设置标题
+  setDialogTitle('编辑员工');
+  // 打开表单
+  openDialog();
+}
+// 回显员工
+const getEmpById = async (empId) => {
+  const res = await queryByIdApi(empId)
+  if (res.code) {
+    employee.value = res.data
+    employee.value.exprList.forEach(expr => {
+      expr.date = [expr.begin, expr.end]
+    })
+  } else {
+    ElMessage.error(res.message)
+  }
+}
+// 提交编辑
+const updateEmp = async () => {
+  if (await checkForm()) {
+    const res = await updateApi(employee.value)
+    if(res.code){
+      ElMessage.success("更新成功")
+      await handleSearch()
+      closeDialog()
+    }else {
+      ElMessage.error(res.message)
+    }
+  }
+}
+// 取消操作
+const cancelUpdate = () => {
+  closeDialog();
+  clearEmp();
+}
+
+/**
+ * 删除员工
+ * @author BanXia
+ */
+// 删除员工确认框
+const delByIdBox = async (emp) => {
+  // 弹出确认框
+  ElMessageBox.confirm(
+    '是否删除所选员工？',
+    "是否删除",
+    {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      deleteEmpById(emp)
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消删除',
+      })
+    })
+}
+// 批量删除员工确认框
+const delByIdsBox = async (emp) => {
+  // 弹出确认框
+  ElMessageBox.confirm(
+    '是否删除所选员工？',
+    "是否删除",
+    {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      deleteEmpById(emp)
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消删除',
+      })
+    })
+}
+// 删除员工
+const deleteEmpById = async (emp) => {
+  if(emp.length === 0){
+    ElMessage.error("请至少选择一名员工")
+    return;
+  }
+  const delIdList = [];
+  for (let i = 0; i < emp.length; i++) {
+    await deleteAvatarByUrl(emp[i].image)
+    delIdList.push(emp[i].id)
+  }
+  const res = await deleteApi(delIdList)
+  if(res.code){
+    await handleSearch()
+    ElMessage.success("删除成功")
+  }else{
+    ElMessage.error(res.message)
+  }
+}
 </script>
 
 <template>
@@ -353,13 +486,18 @@ const updateBut = async (empId) => {}
 <!--  新增&删除按钮-->
   <div class="container">
     <el-button type="primary" @click="addEmpBut"> + 新增员工</el-button>
-    <el-button type="danger" @click=""> - 批量删除</el-button>
+    <el-button type="danger" @click="delByIdsBox(delIdList)"> - 批量删除</el-button>
   </div>
+
+  {{delIdList}}
 
 <!--  数据表格-->
   <div class="container">
     <el-scrollbar max-height="600">
-      <el-table :data="empList"border style="width: 100%">
+      <el-table
+        :data="empList"
+        border style="width: 100%"
+        @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center"/>
         <el-table-column prop="name" label="姓名" width="120" align="center"/>
         <el-table-column label="性别" width="120"  align="center">
@@ -369,7 +507,7 @@ const updateBut = async (empId) => {}
         </el-table-column>
         <el-table-column label="头像" width="120"  align="center">
           <template #default="scope">
-            <img v-if="scope.row.image" :src="scope.row.image" height="30px">
+            <img v-if="scope.row.image" :src="scope.row.image" height="30px" alt="">
           </template>
         </el-table-column>
         <el-table-column prop="deptName" label="所属部门" width="120"  align="center"/>
@@ -387,8 +525,8 @@ const updateBut = async (empId) => {}
         <el-table-column prop="updateTime" label="最后操作时间" width="200"  align="center"/>
         <el-table-column label="操作" align="center">
           <template #default="scope">
-            <el-button type="primary" size="small" @click=""><el-icon><EditPen /></el-icon> 编辑</el-button>
-            <el-button type="danger" size="small" @click=""><el-icon><Delete /></el-icon> 删除</el-button>
+            <el-button type="primary" size="small" @click="updateBut(scope.row.id)"><el-icon><EditPen /></el-icon> 编辑</el-button>
+            <el-button type="danger" size="small" @click="delByIdBox([scope.row])"><el-icon><Delete /></el-icon> 删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -410,13 +548,12 @@ const updateBut = async (empId) => {}
   </div>
 
 <!--  上传/修改对话框-->
-  <el-dialog v-model="dialogVisible" :title="dialogTitle">
+  <el-dialog v-model="dialogVisible" :title="dialogTitle" :before-close="close">
     <el-form
       :model="employee"
       label-width="80px"
       :rules="rules"
       ref="employeeForm"
-      :close = "close"
       >
       <!-- 基本信息 -->
       <!-- 第一行 -->
@@ -438,9 +575,8 @@ const updateBut = async (empId) => {}
       <el-row :gutter="20">
         <el-col :span="12">
           <el-form-item label="性别" prop="gender">
-            <el-select v-model="employee.gender" placeholder="请选择性别" style="width: 100%;">
-              <el-option label="男" value="1"></el-option>
-              <el-option label="女" value="2"></el-option>
+            <el-select v-model="employee.gender" placeholder="请选择性别" style="width: 100%;" >
+              <el-option v-for="gender in genderList" :key="gender.name" :label="gender.name" :value="gender.value"></el-option>
             </el-select>
           </el-form-item>
         </el-col>
@@ -457,11 +593,7 @@ const updateBut = async (empId) => {}
         <el-col :span="12">
           <el-form-item label="职位">
             <el-select v-model="employee.job" placeholder="请选择职位" style="width: 100%;">
-              <el-option label="班主任" value="1"></el-option>
-              <el-option label="讲师" value="2"></el-option>
-              <el-option label="学工主管" value="3"></el-option>
-              <el-option label="教研主管" value="4"></el-option>
-              <el-option label="咨询师" value="5"></el-option>
+              <el-option v-for="job in jobList" :key="job.name" :label="job.name" :value="job.value"></el-option>
             </el-select>
           </el-form-item>
         </el-col>
@@ -569,28 +701,5 @@ const updateBut = async (empId) => {}
   width: 78px;
   height: 78px;
   display: block;
-}
-.avatar-uploader .el-upload {
-  border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: var(--el-transition-duration-fast);
-}
-
-.avatar-uploader .el-upload:hover {
-  border-color: var(--el-color-primary);
-}
-
-.el-icon.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 78px;
-  height: 78px;
-  text-align: center;
-  border-radius: 10px;
-  /* 添加灰色的虚线边框 */
-  border: 1px dashed var(--el-border-color);
 }
 </style>
