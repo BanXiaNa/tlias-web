@@ -136,6 +136,12 @@ const rules = ref({
     { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号', trigger: 'blur' }
   ]
 });
+// 确认操作
+const confirm = ref()
+// 取消操作
+const cancel = ref()
+// 关闭操作
+const close = ref()
 // 打开对话框
 const openDialog = () => {
   dialogVisible.value = true
@@ -143,6 +149,7 @@ const openDialog = () => {
 // 关闭对话框
 const closeDialog = () => {
   dialogVisible.value = false
+  employeeForm.value.resetFields();
 }
 // 清空数据模型
 const clearEmp = () => {
@@ -159,11 +166,22 @@ const clearEmp = () => {
     exprList: []
   }
 }
+// 设置确认操作
+const setConfirm = (func) => {
+  confirm.value = func
+}
+// 设置取消操作
+const setCancel = (func) => {
+  cancel.value = func
+}
+// 设置关闭操作
+const setClose = (func) => {
+  close.value = func
+}
 // 设置标题
 const setDialogTitle = (title) => {
   dialogTitle.value = title
 }
-
 // 查询部门列表
 const getDeptList = async () => {
   const res = await queryDeptList()
@@ -172,6 +190,19 @@ const getDeptList = async () => {
   }else{
     ElMessage.error(res.message)
   }
+}
+// 校验表单
+const checkForm = () => {
+  return new Promise((resolve, reject) => {
+    employeeForm.value.validate(valid => {
+      if (valid) {
+        resolve(true)
+      } else {
+        ElMessage.error("请填写正确的数据")
+        reject(false)
+      }
+    })
+  })
 }
 
 /**
@@ -244,19 +275,29 @@ watch(employee, () => {
  */
 // 按钮触发
 const addEmpBut = async () => {
+  // 设置确认操作
+  setConfirm(addEmp)
+  // 设置取消操作
+  setCancel(cancelCreate)
+  // 设置关闭操作
+  setClose(cancelCreate)
+  // 设置标题
   setDialogTitle('新增员工');
+  // 打开表单
   openDialog();
 }
 // 新增操作
 const addEmp = async () => {
-  const res = await addApi(employee.value)
-  if (res.code) {
-    ElMessage.success("新增成功")
-    clearEmp()
-    closeDialog()
-    await handleSearch()
-  } else {
-    ElMessage.error(res.message)
+  if(await checkForm()){
+    const res = await addApi(employee.value)
+    if (res.code) {
+      ElMessage.success("新增成功")
+      clearEmp()
+      closeDialog()
+      await handleSearch()
+    } else {
+      ElMessage.error(res.message)
+    }
   }
 }
 // 取消创建
@@ -375,7 +416,7 @@ const updateBut = async (empId) => {}
       label-width="80px"
       :rules="rules"
       ref="employeeForm"
-      :close = "dialogClose"
+      :close = "close"
       >
       <!-- 基本信息 -->
       <!-- 第一行 -->
@@ -509,8 +550,8 @@ const updateBut = async (empId) => {}
     <!-- 底部按钮 -->
     <template #footer>
         <span class="dialog-footer">
-          <el-button @click="cancelCreate">取消</el-button>
-          <el-button type="primary" @click="addEmp">保存</el-button>
+          <el-button @click="cancel">取消</el-button>
+          <el-button type="primary" @click="confirm">保存</el-button>
         </span>
     </template>
   </el-dialog>

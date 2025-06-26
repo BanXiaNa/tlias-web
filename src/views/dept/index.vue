@@ -238,7 +238,7 @@ const delById = async (deptId) => {
   </div>
 
 <!--新增&修改对话框-->
-  <el-dialog v-model="dialogFormVisible" :title="dialogTitle" width="500">
+  <el-dialog v-model="dialogFormVisible" :title="dialogTitle" width="500" :before-close="closeDialog" >
     <el-form :model="deptData" :rules="dialogRules" ref = "deptForm">
       <el-form-item label="部门名称" :label-width="80" prop="name">
         <el-input v-model="deptData.name"/>
