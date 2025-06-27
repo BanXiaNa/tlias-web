@@ -417,7 +417,6 @@ const deleteDept = async (deptId) => {
         :rules="rules"
         ref="employeeForm"
       >
-        {{clazz}}
         <!-- 基本信息 -->
         <!-- 第一行 -->
         <el-row :gutter="20">
@@ -485,7 +484,7 @@ const deleteDept = async (deptId) => {
 
         <!-- 第七行 -->
         <el-row :gutter="20">
-          <el-col :span="10" align="center">
+          <el-col :span="10" align="right">
             <el-button @click="cancel">取消</el-button>
           </el-col>
           <el-col :span="10" align="center">

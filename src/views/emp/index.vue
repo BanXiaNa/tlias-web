@@ -546,7 +546,10 @@ const deleteEmpById = async (emp) => {
   </div>
 
 <!--  上传/修改对话框-->
-  <el-dialog v-model="dialogVisible" :title="dialogTitle" :before-close="close">
+  <el-dialog
+    v-model="dialogVisible"
+    :title="dialogTitle"
+    :before-close="close">
     <el-form
       :model="employee"
       label-width="80px"
