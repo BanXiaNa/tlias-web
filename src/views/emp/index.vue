@@ -62,14 +62,10 @@ const handleReset = () => {
   handleSearch()
 };
 
-/**
- * 新增&删除按钮
- * author: BanXia
- */
-
 
 /**
  * 表格
+ * author: BanXia
  */
 // 数据模型
 const empList = ref([]);
@@ -82,6 +78,7 @@ const handleSelectionChange = (val) => {
 
 /**
  * 分页条
+ * author: BanXia
  */
 // 每页显示的记录数
 const currentPage = ref(1);
