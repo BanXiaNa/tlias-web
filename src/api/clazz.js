@@ -18,4 +18,4 @@ export const queryClazzByIdApi = (id) => request.get(`/clazzs/${id}`);
 export const updateClazzApi = (clazz) => request.put('/clazzs', clazz);
 
 // 查询所有班级
-export const queryClazzListApi = () => request.get('/clazzs/list');
+export const queryClazzAllApi = () => request.get('/clazzs/list');
