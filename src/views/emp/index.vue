@@ -252,6 +252,7 @@ const deleteAvatarByUrl = async (urls) => {
   urls = urls.replace(/^https?:\/\/[^\/]+\//, "");
   await deleteAvatarApi(urls)
 }
+
 /**
  * 工作经历
  * @author BanXia
