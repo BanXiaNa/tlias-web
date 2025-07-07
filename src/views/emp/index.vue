@@ -15,8 +15,23 @@ onMounted(() => {
   handleSearch()
   // 获取部门列表
   getDeptList()
+  // 获取令牌
+  getToken()
 })
 
+/**
+ * 令牌
+ * @author BanXia
+ */
+// 令牌
+const token = ref(null)
+// 获取令牌
+const getToken = async () => {
+  const  loginData = await JSON.parse(localStorage.getItem('loginData'))
+  if(loginData && loginData.token){
+    token.value = loginData.token
+  }
+}
 
 /**
  * 搜索表单
@@ -626,6 +641,7 @@ const deleteEmpById = async (emp) => {
             <el-upload
               class="avatar-uploader"
               action="/api/upload"
+              :headers="{'token': token}"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
               :before-upload="beforeAvatarUpload"

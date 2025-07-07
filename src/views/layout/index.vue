@@ -8,6 +8,46 @@ import {
   SwitchButton,
   UserFilled
 } from "@element-plus/icons-vue";
+import { onMounted, ref } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { useRouter } from "vue-router";
+
+// 钩子函数
+onMounted(() => {
+  const loginData = JSON.parse(localStorage.getItem("loginData"));
+  if (loginData && loginData.name){
+    userName.value = loginData.name
+  }
+})
+
+const router = useRouter()
+
+const logOut = () => {
+  // 弹出确认框
+  ElMessageBox.confirm(
+    '退出登录吗？',
+    "退出",
+    {
+      confirmButtonText: '退出',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      localStorage.removeItem("loginData")
+      router.push("/login")
+      ElMessage({
+        type: 'success',
+        message: '已退出登录',
+      })
+    })
+    .catch(() => {
+      ElMessage.info("已取消退出登录")
+    })
+}
+
+// 当前登录的员工
+const userName = ref("")
 </script>
 
 <template>
@@ -20,8 +60,8 @@ import {
           <a href="">
             <el-icon><EditPen /></el-icon> 修改密码 &nbsp;&nbsp;&nbsp; |  &nbsp;&nbsp;&nbsp;
           </a>
-          <a href="">
-            <el-icon><SwitchButton /></el-icon> 退出登录
+          <a href="javascript:;" @click = "logOut">
+            <el-icon><SwitchButton /></el-icon> 退出登录 【{{userName}}】
           </a>
         </span>
       </el-header>

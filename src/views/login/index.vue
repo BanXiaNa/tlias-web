@@ -1,8 +1,34 @@
 <script setup>
   import { ref } from 'vue'
-  
+  import { loginApi } from "@/api/login"
+  import { ElMessage } from "element-plus";
+  import { useRouter} from 'vue-router'
+
+  // 表单对象
   let loginForm = ref({username:'', password:''})
-  
+
+  // 路由对象
+  const router = useRouter();
+
+  // 登录方法
+  const login = async () => {
+    const res = await loginApi(loginForm.value)
+    if(res.code){
+      ElMessage.success("登录成功")
+      router.push('/index')
+      localStorage.setItem("loginData", JSON.stringify(res.data))
+    }else {
+      ElMessage.error("用户名或密码错误")
+    }
+  }
+
+  // 重置方法
+  const reset = () => {
+    loginForm.value = {
+      username:'',
+      password:''
+    }
+  }
 </script>
 
 <template>
@@ -19,8 +45,8 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button class="button" type="primary" @click="">登 录</el-button>
-          <el-button class="button" type="info" @click="">重 置</el-button>
+          <el-button class="button" type="primary" @click="login">登 录</el-button>
+          <el-button class="button" type="info" @click="reset">重 置</el-button>
         </el-form-item>
       </el-form>
     </div>
